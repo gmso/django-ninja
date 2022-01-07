@@ -1,4 +1,5 @@
 from django.db import models
+from django.core import validators
 
 
 class Category(models.Model):
@@ -19,3 +20,25 @@ class Event(models.Model):
 
 class Client(models.Model):
     key = models.CharField(max_length=20, unique=True)
+
+
+class Goal(models.Model):
+    name = models.CharField(max_length=50)
+
+
+class Todo(models.Model):
+    title = models.CharField(max_length=50)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    goal = models.ForeignKey(Goal, null=True, blank=True, on_delete=models.CASCADE)
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=30)
+    todos = models.ManyToManyField(Todo)
+
+
+class Ranking(models.Model):
+    position = models.PositiveIntegerField(
+        validators=[validators.MinValueValidator(1)]
+    )
+    todo = models.OneToOneField(Todo, on_delete=models.CASCADE, null=True, blank=True)
