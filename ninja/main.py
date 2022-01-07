@@ -20,6 +20,7 @@ from ninja.errors import ConfigError, set_default_exc_handlers
 from ninja.openapi import get_schema
 from ninja.openapi.schema import OpenAPISchema
 from ninja.openapi.urls import get_openapi_urls, get_root_url
+from ninja.orm import serializers
 from ninja.parser import Parser
 from ninja.renderers import BaseRenderer, JSONRenderer
 from ninja.router import Router
@@ -337,7 +338,13 @@ class NinjaAPI:
     def create_response(
         self, request: HttpRequest, data: Any, *, status: int = 200
     ) -> HttpResponse:
-        content = self.renderer.render(request, data, response_status=status)
+        if serializers.is_queryset(data):
+            data_to_render = serializers.serialize_queryset(data)
+        elif serializers.is_model_instance(data):
+            data_to_render = serializers.serialize_model_instance(data)
+        else:
+            data_to_render = data
+        content = self.renderer.render(request, data_to_render, response_status=status)
         content_type = "{}; charset={}".format(
             self.renderer.media_type, self.renderer.charset
         )

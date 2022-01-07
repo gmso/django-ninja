@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from django.urls import reverse
 import pytest
@@ -10,12 +11,12 @@ def db_factory():
     goal = models.Goal.objects.create(name="Learn foreign languages")
     todo_italian = models.Todo.objects.create(
         title="Study italian",
-        completed_at = datetime.datetime(2022,10,1,1,10,20),
+        completed_at = datetime.datetime(2022,10,1,1,10,20,tzinfo=datetime.timezone.utc),
         goal = goal
     )
     todo_project = models.Todo.objects.create(
         title="Work on project A",
-        completed_at = datetime.datetime(2022,10,1,1,10,20),
+        completed_at = datetime.datetime(2022,10,1,1,10,20,tzinfo=datetime.timezone.utc),
     )
     todo_dishes = models.Todo.objects.create(title="Wash the dishes")
     todo_french = models.Todo.objects.create(
@@ -50,6 +51,9 @@ def db_factory():
     }
 
 
+def datetime_to_str(dt: datetime) -> str:
+    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
 @pytest.mark.django_db
 def test_serialize_model_FK_reversem2m_reverseone2one_queryset_no_prefetch(client):
     """
@@ -58,5 +62,13 @@ def test_serialize_model_FK_reversem2m_reverseone2one_queryset_no_prefetch(clien
     Test serialization of Queryset
     NO prefetch used for reverse ManyToMany
     """
-    objects = db_factory()
-    response = client.get("/api/events/todos/no_prefetch")
+    db = db_factory()
+    http_response = client.get("/api/events/todos/no_prefetch")
+    res = json.loads(http_response.content.decode('utf-8'))
+    assert res[0]["ranking"]["id"] == db["rankings"]["ranking_2"].id
+    assert res[0]["ranking"]["position"] == db["rankings"]["ranking_2"].position
+    assert res[0]["id"] == db["todos"]["todo_italian"].id
+    assert res[0]["title"] == db["todos"]["todo_italian"].title
+    assert res[0]["completed_at"] == datetime_to_str(db["todos"]["todo_italian"].completed_at)
+    assert res[0]["goal"]["id"] == db["goal"].id
+    assert res[0]["goal"]["name"] == db["goal"].name
