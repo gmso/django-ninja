@@ -1,5 +1,5 @@
-from django.db import models
 from django.core import validators
+from django.db import models
 
 
 class Category(models.Model):
@@ -38,7 +38,5 @@ class Tag(models.Model):
 
 
 class Ranking(models.Model):
-    position = models.PositiveIntegerField(
-        validators=[validators.MinValueValidator(1)]
-    )
+    position = models.PositiveIntegerField(validators=[validators.MinValueValidator(1)])
     todo = models.OneToOneField(Todo, on_delete=models.CASCADE, null=True, blank=True)

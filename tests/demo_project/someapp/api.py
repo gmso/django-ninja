@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from ninja import Router
 
-from .models import Event, Todo, Tag, Goal, Ranking
+from .models import Event, Goal, Ranking, Tag, Todo
 
 router = Router()
 
@@ -44,7 +44,7 @@ def get_all_todos_without_prefetch(request):
 
 @router.get("/todos/prefetched")
 def get_all_todos_with_prefetch(request):
-    return Todo.objects.all().prefetch_related('tag_set')
+    return Todo.objects.all().prefetch_related("tag_set")
 
 
 @router.get("/tags/no_prefetch")
@@ -54,7 +54,7 @@ def get_all_tags_without_prefetch(request):
 
 @router.get("/tags/prefetched")
 def get_all_tags_with_prefetch(request):
-    return Tag.objects.all().prefetch_related('todos')
+    return Tag.objects.all().prefetch_related("todos")
 
 
 @router.get("/goals/no_prefetch")
@@ -64,7 +64,7 @@ def get_all_goals_without_prefetch(request):
 
 @router.get("/goals/prefetched")
 def get_all_goals_with_prefetch(request):
-    return Goal.objects.all().prefetch_related('todo_set')
+    return Goal.objects.all().prefetch_related("todo_set")
 
 
 @router.get("/rankings/no_prefetch")
