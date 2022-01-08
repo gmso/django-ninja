@@ -55,35 +55,48 @@ def datetime_to_str(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def assert_plain_todo_first(db, res):
+    assert res["ranking"]["id"] == db["rankings"]["ranking_2"].id
+    assert res["ranking"]["position"] == db["rankings"]["ranking_2"].position
+    assert res["id"] == db["todos"]["todo_italian"].id
+    assert res["title"] == db["todos"]["todo_italian"].title
+    assert res["completed_at"] == datetime_to_str(db["todos"]["todo_italian"].completed_at)
+    assert res["goal"]["id"] == db["goal"].id
+    assert res["goal"]["name"] == db["goal"].name
+
+
+def assert_plain_todo_second(db, res):
+    assert res["ranking"]["id"] == db["rankings"]["ranking_1"].id
+    assert res["ranking"]["position"] == db["rankings"]["ranking_1"].position
+    assert res["id"] == db["todos"]["todo_project"].id
+    assert res["title"] == db["todos"]["todo_project"].title
+    assert res["completed_at"] == datetime_to_str(db["todos"]["todo_project"].completed_at)
+    assert res["goal"] == None
+
+
+def assert_plain_todo_third(db, res):
+    assert res["ranking"] == None
+    assert res["id"] == db["todos"]["todo_dishes"].id
+    assert res["title"] == db["todos"]["todo_dishes"].title
+    assert res["completed_at"] == None
+    assert res["goal"] == None
+
+
+def assert_plain_todo_fourth(db, res):
+    assert res["ranking"]["id"] == db["rankings"]["ranking_3"].id
+    assert res["ranking"]["position"] == db["rankings"]["ranking_3"].position
+    assert res["id"] == db["todos"]["todo_french"].id
+    assert res["title"] == db["todos"]["todo_french"].title
+    assert res["completed_at"] == None
+    assert res["goal"]["id"] == db["goal"].id
+    assert res["goal"]["name"] == db["goal"].name
+
+
 def assert_plain_returned_todo_list(db, res):
-    assert res[0]["ranking"]["id"] == db["rankings"]["ranking_2"].id
-    assert res[0]["ranking"]["position"] == db["rankings"]["ranking_2"].position
-    assert res[0]["id"] == db["todos"]["todo_italian"].id
-    assert res[0]["title"] == db["todos"]["todo_italian"].title
-    assert res[0]["completed_at"] == datetime_to_str(db["todos"]["todo_italian"].completed_at)
-    assert res[0]["goal"]["id"] == db["goal"].id
-    assert res[0]["goal"]["name"] == db["goal"].name
-
-    assert res[1]["ranking"]["id"] == db["rankings"]["ranking_1"].id
-    assert res[1]["ranking"]["position"] == db["rankings"]["ranking_1"].position
-    assert res[1]["id"] == db["todos"]["todo_project"].id
-    assert res[1]["title"] == db["todos"]["todo_project"].title
-    assert res[1]["completed_at"] == datetime_to_str(db["todos"]["todo_project"].completed_at)
-    assert res[1]["goal"] == None
-
-    assert res[2]["ranking"] == None
-    assert res[2]["id"] == db["todos"]["todo_dishes"].id
-    assert res[2]["title"] == db["todos"]["todo_dishes"].title
-    assert res[2]["completed_at"] == None
-    assert res[2]["goal"] == None
-
-    assert res[3]["ranking"]["id"] == db["rankings"]["ranking_3"].id
-    assert res[3]["ranking"]["position"] == db["rankings"]["ranking_3"].position
-    assert res[3]["id"] == db["todos"]["todo_french"].id
-    assert res[3]["title"] == db["todos"]["todo_french"].title
-    assert res[3]["completed_at"] == None
-    assert res[3]["goal"]["id"] == db["goal"].id
-    assert res[3]["goal"]["name"] == db["goal"].name
+    assert_plain_todo_first(db, res[0])
+    assert_plain_todo_second(db, res[1])
+    assert_plain_todo_third(db, res[2])
+    assert_plain_todo_fourth(db, res[3])
 
 
 def assert_prefetched_returned_todo_list(db, res):
@@ -257,3 +270,22 @@ def test_serialize_model_one2one_queryset_no_prefetch(client):
     http_response = client.get("/api/events/rankings/no_prefetch")
     res = json.loads(http_response.content.decode('utf-8'))
     assert_plain_returned_rankings_list(db, res)
+
+
+@pytest.mark.django_db
+def test_serialize_model_single_instance_no_prefetch(client):
+    """
+    Test serialization of model instance
+    NO prefetch used for other relationships
+    """
+    db = db_factory()
+
+    id = 1
+    http_response = client.get(f"/api/events/todos/{str(id)}")
+    res = json.loads(http_response.content.decode('utf-8'))
+    assert_plain_todo_first(db, res)
+    
+    id = 4
+    http_response = client.get(f"/api/events/todos/{str(id)}")
+    res = json.loads(http_response.content.decode('utf-8'))
+    assert_plain_todo_fourth(db, res)

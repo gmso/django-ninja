@@ -80,6 +80,7 @@ def get_paginated_todos(request, page: int = 0):
     return Todo.objects.all()[first:last]
 
 
-@router.get("/todos/first")
-def get_first_todo(request):
-    return Todo.objects.get(pk=1)
+@router.get("/todos/{id}")
+def get_todo_from_id(request, id: int):
+    todo = get_object_or_404(Todo, pk=id)
+    return todo
