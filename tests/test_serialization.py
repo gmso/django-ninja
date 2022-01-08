@@ -88,18 +88,18 @@ def assert_plain_returned_todo_list(db, res):
 
 def assert_prefetched_returned_todo_list(db, res):
     assert_plain_returned_todo_list(db, res)
-    
     assert res[0]["tag_set"] == []
-
     assert res[1]["tag_set"][0]["id"] == db["tags"]["tag_work"].id
     assert res[1]["tag_set"][0]["name"] == db["tags"]["tag_work"].name
-
     assert res[2]["tag_set"][0]["id"] == db["tags"]["tag_home"].id
     assert res[2]["tag_set"][0]["name"] == db["tags"]["tag_home"].name
-
     assert res[3]["tag_set"][0]["id"] == db["tags"]["tag_home"].id
     assert res[3]["tag_set"][0]["name"] == db["tags"]["tag_home"].name
 
+
+def assert_plain_returned_tags_list(db, res):
+    assert res[0]["id"] == db["tags"]["tag_home"].id
+    assert res[1]["id"] == db["tags"]["tag_work"].id
 
 
 @pytest.mark.django_db
@@ -122,9 +122,22 @@ def test_serialize_model_FK_reversem2m_reverseone2one_queryset_prefetch(client):
     Test serialization of model with Foreign Key, reverse ManyToMany and reverse
     OneToOne relationships.
     Test serialization of Queryset
-    Prefetch used for reverse ManyToMany
+    Prefetch IS USED for reverse ManyToMany
     """
     db = db_factory()
     http_response = client.get("/api/events/todos/prefetched")
     res = json.loads(http_response.content.decode('utf-8'))
     assert_prefetched_returned_todo_list(db, res)
+
+
+@pytest.mark.django_db
+def test_serialize_model_m2m_queryset_no_prefetch(client):
+    """
+    Test serialization of model with ManyToMany relationship.
+    Test serialization of Queryset
+    NO prefetch used for direct ManyToMany
+    """
+    db = db_factory()
+    http_response = client.get("/api/events/tags/no_prefetch")
+    res = json.loads(http_response.content.decode('utf-8'))
+    assert_plain_returned_tags_list(db, res)
