@@ -26,10 +26,6 @@ def is_many_relationship(data: Any) -> bool:
     )
 
 
-def is_field_one_to_one(data: Any) -> bool:
-    return isinstance(data, models.OneToOneRel)
-
-
 def serialize_model_instance(obj: models.Model, referrers: Tuple[Any] = tuple()) -> Dict[Any, Any]:
     """Serializes Django model instance to dictionary"""
     out = {}
@@ -79,8 +75,4 @@ def serialize_many_relationship(obj: models.Model, referrers: Tuple[Any] = tuple
 
 def serialize_value_field(obj: models.Model, field: Any) -> Dict[Any, Any]:
     """Serializes regular 'jsonable' field (Char, Int, etc.) of Django model instance"""
-    value = getattr(obj, field.name)
-    if hasattr(value,'_get_queryset_methods'):
-        # Avoid other fields (like reverse relationships) that cannot be converted to JSON
-        return {}
-    return {field.name: value}
+    return {field.name: getattr(obj, field.name)}
