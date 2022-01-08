@@ -102,6 +102,28 @@ def assert_plain_returned_tags_list(db, res):
     assert res[1]["id"] == db["tags"]["tag_work"].id
 
 
+def assert_prefetched_returned_tags_list(db, res):
+    assert_plain_returned_tags_list(db, res)
+    assert res[0]["todos"][0]["ranking"] == None
+    assert res[0]["todos"][0]["id"] == db["todos"]["todo_dishes"].id
+    assert res[0]["todos"][0]["title"] == db["todos"]["todo_dishes"].title
+    assert res[0]["todos"][0]["completed_at"] == None
+    assert res[0]["todos"][0]["goal"] == None
+    assert res[0]["todos"][1]["ranking"]["id"] == db["rankings"]["ranking_3"].id
+    assert res[0]["todos"][1]["ranking"]["position"] == db["rankings"]["ranking_3"].position
+    assert res[0]["todos"][1]["id"] == db["todos"]["todo_french"].id
+    assert res[0]["todos"][1]["title"] == db["todos"]["todo_french"].title
+    assert res[0]["todos"][1]["completed_at"] == None
+    assert res[0]["todos"][1]["goal"]["id"] == db["goal"].id
+    assert res[0]["todos"][1]["goal"]["name"] == db["goal"].name
+    assert res[1]["todos"][0]["ranking"]["id"] == db["rankings"]["ranking_1"].id
+    assert res[1]["todos"][0]["ranking"]["position"] == db["rankings"]["ranking_1"].position
+    assert res[1]["todos"][0]["id"] == db["todos"]["todo_project"].id
+    assert res[1]["todos"][0]["title"] == db["todos"]["todo_project"].title
+    assert res[1]["todos"][0]["completed_at"] == datetime_to_str(db["todos"]["todo_project"].completed_at)
+    assert res[1]["todos"][0]["goal"] == None
+
+
 @pytest.mark.django_db
 def test_serialize_model_FK_reversem2m_reverseone2one_queryset_no_prefetch(client):
     """
@@ -141,3 +163,16 @@ def test_serialize_model_m2m_queryset_no_prefetch(client):
     http_response = client.get("/api/events/tags/no_prefetch")
     res = json.loads(http_response.content.decode('utf-8'))
     assert_plain_returned_tags_list(db, res)
+
+
+@pytest.mark.django_db
+def test_serialize_model_m2m_queryset_with_prefetch(client):
+    """
+    Test serialization of model with ManyToMany relationship.
+    Test serialization of Queryset
+    Prefetch IS USED for direct ManyToMany
+    """
+    db = db_factory()
+    http_response = client.get("/api/events/tags/prefetched")
+    res = json.loads(http_response.content.decode('utf-8'))
+    assert_prefetched_returned_tags_list(db, res)
