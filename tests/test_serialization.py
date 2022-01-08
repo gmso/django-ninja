@@ -289,3 +289,28 @@ def test_serialize_model_single_instance_no_prefetch(client):
     http_response = client.get(f"/api/events/todos/{str(id)}")
     res = json.loads(http_response.content.decode('utf-8'))
     assert_plain_todo_fourth(db, res)
+
+
+@pytest.mark.django_db
+def test_serialize_queryset_pagination_no_prefetch(client):
+    """
+    Test serialization of queryset with pagination
+    NO prefetch used for other relationships
+    """
+    db = db_factory()
+
+    http_response = client.get("/api/events/todos/paginated")
+    res = json.loads(http_response.content.decode('utf-8'))
+    assert_plain_todo_first(db, res[0])
+    assert_plain_todo_second(db, res[1])
+
+    http_response = client.get(f"/api/events/todos/paginated?page=1")
+    res = json.loads(http_response.content.decode('utf-8'))
+    assert_plain_todo_first(db, res[0])
+    assert_plain_todo_second(db, res[1])
+
+    http_response = client.get(f"/api/events/todos/paginated?page=2")
+    res = json.loads(http_response.content.decode('utf-8'))
+    assert_plain_todo_third(db, res[0])
+    assert_plain_todo_fourth(db, res[1])
+    

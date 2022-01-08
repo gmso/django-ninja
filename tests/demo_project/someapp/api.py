@@ -73,9 +73,9 @@ def get_all_rankings_without_prefetch(request):
 
 
 @router.get("/todos/paginated")
-def get_paginated_todos(request, page: int = 0):
+def get_paginated_todos(request, page: int = 1):
     paginate_by = 2
-    first = paginate_by * page
+    first = paginate_by * (page - 1)
     last = first + paginate_by
     return Todo.objects.all()[first:last]
 
