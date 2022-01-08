@@ -26,7 +26,7 @@ def db_factory():
     tag_home = models.Tag.objects.create(name = "Home")
     tag_home.todos.set([todo_dishes, todo_french])
     tag_work = models.Tag.objects.create(name = "Work")
-    tag_home.todos.set([todo_project])
+    tag_work.todos.set([todo_project])
     ranking_1 = models.Ranking.objects.create(position = 1, todo = todo_project)
     ranking_2 = models.Ranking.objects.create(position = 2, todo = todo_italian)
     ranking_3 = models.Ranking.objects.create(position = 3, todo = todo_french)
@@ -55,7 +55,7 @@ def datetime_to_str(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def assert_returned_todo_list(db, res):
+def assert_plain_returned_todo_list(db, res):
     assert res[0]["ranking"]["id"] == db["rankings"]["ranking_2"].id
     assert res[0]["ranking"]["position"] == db["rankings"]["ranking_2"].position
     assert res[0]["id"] == db["todos"]["todo_italian"].id
@@ -86,6 +86,22 @@ def assert_returned_todo_list(db, res):
     assert res[3]["goal"]["name"] == db["goal"].name
 
 
+def assert_prefetched_returned_todo_list(db, res):
+    assert_plain_returned_todo_list(db, res)
+    
+    assert res[0]["tag_set"] == []
+
+    assert res[1]["tag_set"][0]["id"] == db["tags"]["tag_work"].id
+    assert res[1]["tag_set"][0]["name"] == db["tags"]["tag_work"].name
+
+    assert res[2]["tag_set"][0]["id"] == db["tags"]["tag_home"].id
+    assert res[2]["tag_set"][0]["name"] == db["tags"]["tag_home"].name
+
+    assert res[3]["tag_set"][0]["id"] == db["tags"]["tag_home"].id
+    assert res[3]["tag_set"][0]["name"] == db["tags"]["tag_home"].name
+
+
+
 @pytest.mark.django_db
 def test_serialize_model_FK_reversem2m_reverseone2one_queryset_no_prefetch(client):
     """
@@ -97,4 +113,18 @@ def test_serialize_model_FK_reversem2m_reverseone2one_queryset_no_prefetch(clien
     db = db_factory()
     http_response = client.get("/api/events/todos/no_prefetch")
     res = json.loads(http_response.content.decode('utf-8'))
-    assert_returned_todo_list(db, res)
+    assert_plain_returned_todo_list(db, res)
+
+
+@pytest.mark.django_db
+def test_serialize_model_FK_reversem2m_reverseone2one_queryset_prefetch(client):
+    """
+    Test serialization of model with Foreign Key, reverse ManyToMany and reverse
+    OneToOne relationships.
+    Test serialization of Queryset
+    Prefetch used for reverse ManyToMany
+    """
+    db = db_factory()
+    http_response = client.get("/api/events/todos/prefetched")
+    res = json.loads(http_response.content.decode('utf-8'))
+    assert_prefetched_returned_todo_list(db, res)
