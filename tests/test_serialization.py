@@ -143,6 +143,29 @@ def assert_prefetched_returned_goals_list(db, res):
     assert res[0]["todo_set"][1]["completed_at"] == None
 
 
+def assert_plain_returned_rankings_list(db, res):
+    assert res[0]["id"] == db["rankings"]["ranking_1"].id
+    assert res[0]["position"] == db["rankings"]["ranking_1"].position
+    assert res[0]["todo"]["id"] == db["todos"]["todo_project"].id
+    assert res[0]["todo"]["title"] == db["todos"]["todo_project"].title
+    assert res[0]["todo"]["completed_at"] == datetime_to_str(db["todos"]["todo_project"].completed_at)
+    assert res[0]["todo"]["goal"] == None
+    assert res[1]["id"] == db["rankings"]["ranking_2"].id
+    assert res[1]["position"] == db["rankings"]["ranking_2"].position
+    assert res[1]["todo"]["id"] == db["todos"]["todo_italian"].id
+    assert res[1]["todo"]["title"] == db["todos"]["todo_italian"].title
+    assert res[1]["todo"]["completed_at"] == datetime_to_str(db["todos"]["todo_italian"].completed_at)
+    assert res[1]["todo"]["goal"]["id"] == db["goal"].id
+    assert res[1]["todo"]["goal"]["name"] == db["goal"].name
+    assert res[2]["id"] == db["rankings"]["ranking_3"].id
+    assert res[2]["position"] == db["rankings"]["ranking_3"].position
+    assert res[2]["todo"]["id"] == db["todos"]["todo_french"].id
+    assert res[2]["todo"]["title"] == db["todos"]["todo_french"].title
+    assert res[2]["todo"]["completed_at"] == None
+    assert res[2]["todo"]["goal"]["id"] == db["goal"].id
+    assert res[2]["todo"]["goal"]["name"] == db["goal"].name
+
+
 @pytest.mark.django_db
 def test_serialize_model_FK_reversem2m_reverseone2one_queryset_no_prefetch(client):
     """
@@ -221,3 +244,16 @@ def test_serialize_model_reverseFK_queryset_with_prefetch(client):
     http_response = client.get("/api/events/goals/prefetched")
     res = json.loads(http_response.content.decode('utf-8'))
     assert_prefetched_returned_goals_list(db, res)
+
+
+@pytest.mark.django_db
+def test_serialize_model_one2one_queryset_no_prefetch(client):
+    """
+    Test serialization of model with direct OneToOne relationship
+    Test serialization of Queryset
+    NO prefetch used for OneToOne relationship
+    """
+    db = db_factory()
+    http_response = client.get("/api/events/rankings/no_prefetch")
+    res = json.loads(http_response.content.decode('utf-8'))
+    assert_plain_returned_rankings_list(db, res)
