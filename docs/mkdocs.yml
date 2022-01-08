@@ -29,6 +29,7 @@ nav:
   - tutorial/response-schema.md
   - tutorial/crud.md
   - tutorial/django-pydantic.md
+  - tutorial/django-querysets-and-models.md
   - Advanced Schema:
     - tutorial/django-pydantic-create-schema.md
     - tutorial/config-pydantic.md
